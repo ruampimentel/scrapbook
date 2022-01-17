@@ -3,6 +3,7 @@ library(tidyverse)
 library(psych)
 
 # load example data
+data(mtcars) 
 load(mtcars)
 
 # run descriptive ----
