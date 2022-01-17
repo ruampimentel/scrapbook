@@ -1,0 +1,167 @@
+---
+title: "Psychometrics - Nelson"
+author: "Ruam Pimentel"
+date: "1/17/2022"
+output: html_document
+---
+#Parte 2: Pacote psych
+
+```{r}
+setwd("C:/Users/PSICOLOGIA/OneDrive/Documentos/MESTRADO USF/PESQUISA/Participantes/Dados/Sujeitos/BFI2")
+```
+
+#instalando e abrindo
+
+```{r}
+library(psych)
+library(GPArotation)
+library(MplusAutomation)
+
+```
+
+
+
+
+#carregando bancos
+```{r}
+banco1<-read.table(choose.files(),header=FALSE,sep="\t")
+banco2<-read.table(choose.files(),header=FALSE,sep="\t")
+banco3<-read.table(choose.files(),header=FALSE,sep="\t")
+
+```
+  
+
+
+#carregando r?tulos dos itens
+```{r}
+labels1<-read.table(choose.files(), header=FALSE, sep="\t")
+labels2<-read.table(choose.files(), header=FALSE, sep="\t")
+labels3<-read.table(choose.files(), header=FALSE, sep="\t")
+```
+
+
+
+--------------------------------------------------------
+  
+  # An?lise fatorial 
+  
+#Qualidade do banco de dados 
+```{r}
+  KMO(banco1)  
+
+```
+
+
+
+```# Reten??o fatorial
+## Very Simple Structure e Minimum Average Partial
+```{r}
+vss<-vss(banco1, n = 3, rotate = "oblimin", diagonal = FALSE, fm = "wls", cor="poly",
+         n.obs=NULL,plot=T,title="Very Simple Structure")
+vss 
+
+
+
+## An?lise paralela
+```{r}
+fa.parallel(banco1, n.obs = NULL,fm="ml", fa="fa",cor="poly",
+            main = "Parallel Analysis Scree Plots", n.iter=20,error.bars=FALSE,
+            SMC=FALSE,ylabel=NULL,show.legend=TRUE,sim=TRUE)
+
+```
+
+
+# An?lise de clusters de itens
+
+```{r}
+iclust(banco1)
+
+```
+
+
+# An?lise fatorial
+```{r}
+fit <- fa.poly(banco1,nfactors=2,rotate="oblimin", fm = "wls")
+print(fit,sort=TRUE)
+
+```
+
+
+
+# Fidedignidade -----------------------------------------------------------
+```{r}
+
+alpha(banco)
+omega(banco1, poly=TRUE,nfactors=2)
+
+```
+
+
+
+# Construir uma vari?vel com o escore total de um instrumento ou escala
+```{r}
+itens<-banco1[c(9,1,10,3)] # selecionar todos os itens do instrumento
+keys.list <- list(c(1,2,3,4)) # selecionar os itens a serem somados
+keys <- make.keys(itens,keys.list)
+scores <- scoreItems(keys,itens,totals=TRUE, min=0,max=1)#if "totals=TRUE" then total scores; if "totals=FALSE" then mean scores
+scores
+banco1$escore.total<-scores$scores
+
+```
+
+
+#Matriz teorica ----------------------------------------------------------
+```{r}
+library(readxl)
+matriz_teorica <- read_excel("C:/Users/PSICOLOGIA/OneDrive/Documentos/MESTRADO USF/02 semestre/Psicometria/analise.confirmatorias.exploratorias/MATRIZ_TEORICA.xlsx")
+View(matriz_teorica)
+
+```
+
+
+#selecionando apenas colunas 2 e 3 - sobrescrita
+matriz_teorica <- matriz_teorica[2:3]
+
+#carregando banco
+```{r}
+setwd("C:/Users/PSICOLOGIA/OneDrive/Documentos/MESTRADO USF/02 semestre/Psicometria/analise.confirmatorias.exploratorias")
+
+banco_bisbas <- read.table("C:/Users/PSICOLOGIA/OneDrive/Documentos/MESTRADO USF/02 semestre/Psicometria/analise.confirmatorias.exploratorias/simulated.dat.txt", quote="\"", comment.char="")
+
+```
+
+
+# Reten??o fatorial
+## Very Simple Structure e Minimum Average Partial
+```{r}
+vss<-vss(banco_bisbas[1:12], n = 3, rotate = "oblimin", diagonal = FALSE, fm = "wls",
+         n.obs=NULL,plot=T,title="Very Simple Structure")
+vss
+```
+ 
+
+# analise fatorial ------
+```{r}
+fit <- fa(banco_bisbas[1:12],nfactors=3,rotate="oblimin", fm = "wls")
+print(fit,sort=TRUE)
+
+```
+TLI tem q ser maior q 0,95
+RMSEA tem q ser at? 0,08
+
+# analise de congruencia -------------------------
+testar congruencia entra a solucao fatorial e a matriz teorica "fit" ? a solucao
+
+```{r}
+x <- fa.congruence(fit, matriz_teorica, structure = FALSE)
+print(x)
+```
+
+```{r}
+library(readxl)
+RI_BIS_BAS <- read_excel("C:/Users/PSICOLOGIA/OneDrive/Documentos/MESTRADO USF/02 semestre/Psicometria/analise.confirmatorias.exploratorias/MATRIZ_TEORICA.xlsx",3, col_types = "numeric", col_names = FALSE)
+View(matriz_teorica)
+```
+
+
+

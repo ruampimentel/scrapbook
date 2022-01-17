@@ -3,13 +3,12 @@ library(tidyverse)
 library(psych)
 
 # load example data
-load("C:/Users/ruamp/OneDrive - University of Toledo/Classes/2021.3 Fall/Adv Develomental Psychology/Dev Psyc Project/Gabriel's data/Gabriel_environment.RData")
+load(mtcars)
 
 # run descriptive ----
-a <- di_raven %>% 
-  select(R:ageYear) %>% 
+a <- mtcars %>% 
   psych::describe() %>% # this is the main function that I need!
-  as_tibble(rownames = "variables") 
+  as_tibble(rownames = "variables")  #organzining layout
 
 a
 
