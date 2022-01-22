@@ -19,4 +19,4 @@ d_from_t <- function(t, n1, n2) {
 }
 
 # testing function
-d_from_t(2.57, 43, 43)
+d_from_t(3.20, 28, 28)
