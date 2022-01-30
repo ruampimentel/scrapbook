@@ -1,10 +1,14 @@
 # libraries
-
 library(tidyverse)
 library(report)
 library(lm.beta)
 library(apaTables)
-# Regression
+
+# load example data
+data(mtcars) 
+load(mtcars)
+
+# Regression - reorganize to mtcars
 linear_model <- lm(Complexity ~ ageYear, data = di_raven)
 linear_model2 <- lm(Complexity ~ ageYear + raw_scores_ravew, data = di_raven)
 
@@ -15,7 +19,6 @@ lm.beta(linear_model)
 par(mfrow=c(2,2))
 plot(linear_model)
 #par(mfrow=c(1,1))
-
 
 AIC(linear_model)
 BIC(linear_model)
