@@ -1,0 +1,165 @@
+* Encoding: windows-1252.
+
+* Syntax to Compute Cohen's d, Hedge's g, t-tests, and rpb (the point-biserial r) 
+* from the comparison of two group means.
+* Greg Meyer, U of Toledo; gregory.meyer@utoledo.edu.
+
+* This syntax will compute d, g, t, and rpb from Ms and SDs.
+* It also will compute d, g, and rpb directly from t-test results.
+* It is designed to be used in combination with with the data file
+* named 'Computing Cohen's d, g, t, and rpb.sav'.
+
+* If you are not using the template data file, run the following to create variables.
+COMPUTE Grp1Mean = 0.
+COMPUTE Grp1SD   = 0.
+COMPUTE Grp1n    = 0.
+COMPUTE Grp2Mean = 0.
+COMPUTE Grp2SD   = 0.
+COMPUTE Grp2n    = 0.
+RECODE Grp1Mean to Grp2n (0 = sysmiss).
+FORMATS Grp1Mean Grp1SD Grp2Mean Grp2SD (F8.4) Grp1n Grp2n (F8.0).
+EXECUTE.
+
+* Enter the group Ms, SDs, and ns and compute summary df and N.
+COMPUTE df = Grp1n + Grp2n - 2.
+COMPUTE N = Grp1n + Grp2n.
+FORMATS df N (F8.0).
+EXECUTE.
+
+* By default SPSS and SAS produce S, the sample estimate of the population SD, 
+* rather than sigma, the descriptive SD [i.e., where the sample is treated as the 
+* population of interest]. Most published reports also provide S rather than sigma. 
+* Therefore, it is assumed that the SD values entered in Grp1SD and Grp2SD are 
+* S values not sigma values.
+
+* Run the following to obtain t-test results and statistical significance levels.
+COMPUTE t_Numer = Grp1Mean - Grp2Mean.
+COMPUTE Pool_S2 = ((((Grp1n - 1) * (Grp1SD ** 2)) + ((Grp2n - 1) * (Grp2SD ** 2))) / df).
+COMPUTE t_Denom = sqrt(Pool_S2 * ((1 / Grp1n) + (1 / Grp2n))).
+COMPUTE t_Value = (t_Numer / t_Denom).
+COMPUTE t_Sig = (1- CDF.T(ABS(t_Value),df)) * 2.
+FORMATS t_Value t_Sig (F8.4).
+EXECUTE.
+
+* The Cohen's d formula requires that the SDs be computed as descriptive statistics. 
+* That is, the formula assumes that the SDs are sigma, the population SD (computed 
+* with N in the denominator), not S, the inferential estimate of sigma (computed 
+* with N-1 in the denominator). Assuming the values entered in Grp1SD and Grp2SD are 
+* S not sigma, d is computed with the following formula (where Sgm = sigma). 
+COMPUTE Pool_Sgm = sqrt((((Grp1n - 1) * Grp1SD**2) + ((Grp2n - 1) * Grp2SD**2)) / (Grp1n + Grp2n)).
+COMPUTE Cohens_d = (Grp1Mean - Grp2Mean) / pool_sgm.
+FORMATS Pool_Sgm Cohens_d (F8.4).
+EXECUTE.
+
+* If the values entered in Grp1SD and Grp2SD actually were sigma not S, 
+* d would be computed from the following syntax (after removing "* "). 
+* COMPUTE Cohens_d = (Grp1Mean - Grp2Mean) / sqrt(((Grp1SD**2 * Grp1n) + (Grp2SD**2 * Grp2n)) / n).
+* EXECUTE.
+
+* To compute Cohen's d directly from an independent samples t-test result, use the following. 
+* Note, several different formulas are presented, though the results will be identical.
+COMPUTE d_by_t = (t_Value * n) / (sqrt(df) * sqrt(Grp1n * Grp2n)).
+COMPUTE d_by_t2 = ((2* t_Value) / sqrt(df)) * sqrt( ((Grp1n + Grp2n) / 2) / ((2 * Grp1n * Grp2n) / (Grp1n + Grp2n)) ).
+COMPUTE p1 = Grp1n / n.
+COMPUTE p2 = Grp2n / n.
+COMPUTE d_by_t3 = t_Value / sqrt(df * p1 * p2).
+FORMATS d_by_t TO d_by_t3 (F8.4).
+EXECUTE.
+
+* To translate a 2-group F value to d, create a variable named F_value,
+* then enter the data, and use the following. 
+* Note, this only works for F with numerator df = 1.
+COMPUTE d_by_F = (sqrt(F_Value) * n) / (sqrt(df) * sqrt(Grp1n * Grp2n)).
+FORMATS d_by_F (F8.4).
+EXECUTE.
+
+
+* PAIRED SAMPLES OR REPEATED MEASURES DESIGNS.
+* There is some debate in the literature about the proper way to compute d 
+* from paired samples data. At issue is whether the d value should capture
+* the increased power that comes from using correlated observations, or whether 
+* it should retain it's typical descriptive meaning by just indicating how far 
+* apart 2 means are in pooled SD units. Dunlap et al. (1996, Psych Methods, 2, 170-177)
+* argue strongly for the latter and that is the approach taken here.
+* As such, one should compute d directly from the Ms and SDs using the syntax 
+* presented earlier, treating each of the paired observations as an independent sample. 
+*
+* If it is necessary to compute d from a paired samples t-test value, the procedures
+* are more complex. To do so it is necessary to know the magnitude of the correlation
+* between the paired observations, r_Paired. Assuming this is known, create a variable
+* called r_Paired, enter the correlation, and run the following.
+* (Note, Dunlap et al.'s formulas actually compute Hedges g, not Cohen's d. The 
+*  formula below computes d, not g.).
+COMPUTE d_by_tc = t_Value * sqrt((2 * (1 - r_Paired)) / df).
+FORMATS d_by_tc (F8.4).
+EXECUTE.
+
+* To compute Hedges' g directly from Ms and inferential SD estimates, run the following syntax.
+COMPUTE Hedges_g = (Grp1Mean - Grp2Mean) / sqrt(( (Grp1SD**2 * (Grp1n - 1)) + (Grp2SD**2 * (Grp2n - 1)) ) / df).
+* OR:.
+COMPUTE Hedges_g = (Grp1Mean - Grp2Mean) / sqrt(Pool_S2).
+FORMATS Hedges_g (F8.4).
+EXECUTE.
+
+* To compute g from t-test findings, run the following.
+COMPUTE g_by_t = t_Value / sqrt(N * p1 * p2).
+FORMATS g_by_t (F8.4).
+EXECUTE.
+
+* To compute Cohen's d from Hedges' g, use the following.
+COMPUTE d_by_g = Hedges_g / sqrt(df / N).
+FORMATS d_by_g (F8.4).
+EXECUTE.
+
+* To compute Hedges' g from Cohen's d, use the following.
+COMPUTE g_by_d = Cohens_d / sqrt(N / df).
+FORMATS g_by_d (F8.4).
+EXECUTE.
+
+
+* To compute Pearson's r (i.e., rpb) from t-test output, use the following.
+COMPUTE r_by_t = sqrt((t_Value ** 2) / ((t_Value ** 2) + df)).
+FORMATS r_by_t (F8.4).
+EXECUTE.
+
+* To compute r from Cohen's d, use the following.
+COMPUTE r_by_d = Cohens_d / sqrt(Cohens_d**2 + (1 / (p1 * p2))).
+FORMATS r_by_d (F8.4).
+EXECUTE.
+
+* To compute d from r, use one of the following, after entering the variable r or rpb.
+* When r is computed from two dimensional variables:.
+COMPUTE d_by_r = (2 * r) / sqrt(1 - r**2).
+* When r is computed from one dimensional and one categorical variable:.
+COMPUTE d_by_rpb = rpb / sqrt((1 - rpb**2) * (p1 * p2)).
+FORMATS d_by_r d_by_rpb (F8.4).
+EXECUTE.
+
+
+* To compute r from d based on a formula that assumes equal ns, use the following. 
+* Note, this is not generally recommended.
+COMPUTE r_EqualN = Cohens_d / sqrt(Cohens_d**2 + 4).
+FORMATS r_EqualN (F8.4).
+EXECUTE.
+
+
+*------------------------.
+* Additional Computations.
+*------------------------.
+
+* Use the following to compute the pooled SD from a t-value that is given 
+* (i.e., t_ValueG), when the Ms and ns for each group are known.
+* Begin by creating a new variable for the given t-value.
+* Because:
+* t-value = (M1 - M2) / sqrt(pooled S^2 * (1/N1 + 1/N2))
+* sqrt(pooled S^2 * (1/N1 + 1/N2)) * t-value = (M1 - M2) 
+* sqrt(pooled S^2 * (1/N1 + 1/N2)) = (M1 - M2) / t-value
+* pooled S^2 * (1/N1 + 1/N2) = ((M1 - M2) / t-value)^2
+* pooled S^2 = ((M1 - M2) / t-value)^2 / (1/N1 + 1/N2).
+* Therefore, the syntax is:.
+COMPUTE Pool_S = sqrt((Grp1Mean - Grp2Mean) / t_ValueG)**2 / ((1 / Grp1n) + (1 / Grp2n)).
+
+* If it's necessary to convert from the Standard Error to the Standard Deviation use the following.
+* Create 2 new variables, Grp1SE and Grp2SE, and enter the SEs.
+COMPUTE Grp1SD = Grp1SE * sqrt(Grp1n).
+COMPUTE Grp2SD = Grp2SE * sqrt(Grp2n).
