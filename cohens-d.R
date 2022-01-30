@@ -13,3 +13,11 @@ d_from_t_between <- function(t, n1, n2) {
 d_from_t_between(t = 2.24,
                  n1 = 25,
                  n2 = 25)
+
+# One sample or correlated sample ----
+d_from_t_one_sample <- function(t, n) {
+  t/sqrt(n)
+}
+
+d_from_t_one_sample(t = 2.24,
+                    n = 50)
