@@ -14,7 +14,7 @@ A collection of many useful syntax
 
 -   [Nice Packages Source](https://www.computerworld.com/article/2921176/great-r-packages-for-data-import-wrangling-visualization.html)
 
--   
+-   [rstatix - pipe user friendly stats - I love it!](https://github.com/kassambara/rstatix)
 
     # Future ideas and reminders to work on:
 
