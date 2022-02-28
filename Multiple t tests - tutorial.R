@@ -4,6 +4,8 @@ library(ggplot2)
 library(tidyr)
 library(summarytools)
 library(hrbrthemes)
+library(ggpubr)
+
 
 # Check assumptions:
 # [ ] Normality
@@ -131,8 +133,19 @@ result_t_d <- all_ts %>%
 
 
   
-# Graphs
+# plots ------
+
+iris_long %>% # I still have to find how to add p values and d values into this plot
+  ggboxplot(x = "Species", y = "value",
+            fill = "Species", palette = "npg", legend = "none",
+            ggtheme = theme_pubr(border = TRUE) ) +
+  geom_jitter( alpha = .2) +
+  facet_wrap(~name, scale = "free_y") 
+
+
 result_t_d %>% 
   ggplot(aes(x = contrast, y = effsize, fill = name)) +
   geom_bar(stat = "identity", position = "dodge") +
   theme_ipsum()
+
+
