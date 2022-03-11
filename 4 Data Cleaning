@@ -1,0 +1,240 @@
+
+---
+title: "data cleaning for web survey"
+output:
+  html_document:
+    code_folding: hide
+    toc: yes
+    toc_float: yes
+  word_document:
+    toc: yes
+---
+# 1) R markdown setup. And opening packages.
+```{r SETUP, echo = F, message = F, comment = NA, warning = F}
+# setwd("..")
+
+library(car); library(careless); library(data.table); library(dplyr); library(foreign); library(lubridate); library(magrittr);  library(mice); library(MplusAutomation); library(naniar); library(openxlsx); library(rmarkdown); library(sas7bdat);  library(stringr); library(tidyr); 
+
+library(readxl)
+
+library("knitr")
+opts_chunk$set(echo=T, message=FALSE, warning = F, comment = NA)
+
+```
+
+# FIRST, REVIEW HOMEWORK FROM LAST TIME!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+# 2) Loading file
+```{r} 
+
+psu1 <- read_excel("Lectures/4 Data cleaning/PsuData.xlsx")
+
+psu2 <- read_excel("Lectures/4 Data cleaning/PsuData.xlsx")
+
+```
+
+# 3) variable names (don't run)
+```{r, eval = F}
+# eval = F means don't run when knitting
+
+date_start	date_end	time_elapsed	active_time	id	country	age	sex	ethnic	white	black	asian	indian	hawaiian	unknown_race	year_school	employ	marital	relationship	sas1	sas2	sas3	sas4	sas5	sas6	sas7	sas8	sas9	sas10	rtsq1	rtsq2	rtsq3	rtsq4	rtsq5	rtsq6	rtsq7	rtsq8	rtsq9	rtsq10	rtsq11	rtsq12	rtsq13	rtsq14	rtsq15	rtsq16	rtsq17	rtsq18	rtsq19	rtsq20
+```
+
+# 4) Remove participants
+```{r}
+# Operators: (<, <=, >, >=, ==, != )
+
+psu2<-subset(psu1, (id!=6819425 & id!=6845842 & id!=6851655 & id!=6921514 & id!=7001588 & id!=7021243))
+```
+
+# 5) change variable types
+```{r}
+# dates using the lubridate package
+# only run it if the variable is not dttm variable already. check with str() first
+#psu2$date_start<-mdy_hm(psu2$date_start)
+#psu2$date_end<-mdy_hm(psu2$date_end)
+
+# taking the difference between two dates/times
+psu2$difftime<-difftime(psu2$date_end, psu2$date_start, units = "secs")
+psu2$difftime<-as.numeric(psu2$difftime)
+
+glimpse(psu2)
+
+# converting all integers to numeric - using the magrittr package
+psu2 %<>% mutate_if(is.integer,as.numeric)
+
+# converting categorical variables to factors
+psu2$sex<-as.factor(psu2$sex)
+psu2$ethnic<-as.factor(psu2$ethnic)
+psu2$white<-as.factor(psu2$white)
+psu2$black<-as.factor(psu2$black)
+psu2$asian<-as.factor(psu2$asian)
+psu2$indian<-as.factor(psu2$indian)
+psu2$hawaiian<-as.factor(psu2$hawaiian)
+psu2$unknown_race<-as.factor(psu2$unknown_race)
+psu2$year_school<-as.factor(psu2$year_school)
+psu2$employ<-as.factor(psu2$employ)
+psu2$marital<-as.factor(psu2$marital)
+psu2$relationship<-as.factor(psu2$relationship)
+
+psu2b<-psu2
+
+```
+
+# 6) detecting careless responding
+```{r}
+
+# first, using dplyr to add a consecutive id variable to our data frame
+# discuss need to refer to dplyr package here
+psu2b <- psu2b %>% dplyr::mutate(idcareless = 1:n())
+
+# using the careless package, generate careless diagnostics
+longstring<-longstring(psu2b, avg = TRUE)
+
+# use dplyr to add a consecutive id variable to the new longstring data frame
+longstring<-longstring %>% dplyr::mutate(idcareless = 1:n())
+
+# merge our existing data frame with the new longstring data frame, tagged by the new ID number
+psu2b <- merge(psu2b,longstring, by="idcareless", all=T)
+
+# export our data as an excel file, to inspect longstring diagnostics
+# write.xlsx(psu2b, "longstring.xlsx") 
+
+psu2b %>% glimpse()
+psu2b %>% select(id, idcareless, longstr, avgstr) %>% 
+  arrange(desc(longstr) ) %>% 
+  head(20)
+
+# remove the subjects who have a lot of careless responding
+psu3<-subset(psu2b, (id!=6819425 & id!=6845842 & id!=6889877 & id!=6887685 & id!=7041584 & id!=6877481 & id!=6808944))
+
+```
+
+# 7) Scaling down variables and reverse coding
+```{r} 
+# scaling down using the car package
+psu3$sas1TEMP<-Recode(psu3$sas1, "6=5; 5=4; 4=3; 3=2; 2=1; 1=0")
+
+# similar to do reverse coding
+```
+
+# 8) replacing values
+```{r}
+# let's say the only 38 year old told you she accidentally typed 38 instead of 18
+psu3$age[psu3$age==38]<-18
+
+# replacing a value with missing
+psu3$age[psu3$age==-999] <- NA
+
+# replacing all instances of a missing value flag (-999) as missing, using the naniar package
+# in this instance we are not saving back to any other object. It could be a problem later on.
+psu3 %>% replace_with_na_all(condition = ~.x == -999)
+
+replace_with_na_all(data = psu3, condition =  ~.x == -999 )
+
+```
+
+# 9) preparing for missing data treatment
+```{r}
+# selecting just the items we need
+sas<-subset(psu3, select=c(id, sas1:sas10))  # notice I used a colon here to select a consecutive variables
+
+rtsq<-subset(psu3, select=c(id, rtsq1:rtsq20))  
+
+# counting NA values for each scale
+sas$na_count <- apply(is.na(sas), 1, sum) # `1` indicates "row" , ` 2`  indicates column.
+rtsq$na_count <- apply(is.na(rtsq), 1, sum) # `1` indicates "row" , ` 2`  indicates column.
+
+# selecting just the subset of participants missing fewer than 50% of their scale's items
+sas_for_mice<-subset(sas, na_count<6)
+rtsq_for_mice<-subset(rtsq, na_count<11)
+```
+
+# 10) doing missing data estimation
+```{r}
+# first setting a fixed seed
+set.seed(103)
+
+# first imputing values for the SAS. This uses the mice package.
+premice_1 <- subset(sas_for_mice, select=c(id, sas1:sas10))
+premice_2 <- mice(premice_1, maxit=0, pri=T)
+pred <- premice_2$pred 
+    pred[,c("id")] <- 0 
+    meth <- premice_2$meth
+meth[c("id")] <- ""  
+
+postmice_a <- mice(premice_1, m=1, maxit=10, printFlag=TRUE, pred=pred, meth=meth, seed=2345) 
+postmice_b <- mice::complete(postmice_a, "long", include=FALSE)
+postmice_b$.imp <- NULL
+postmice_b$.id<-NULL
+write.table(postmice_b, "sas_mtx.txt", sep="\t", dec=".", row.names=FALSE)
+
+# next imputing RTSQ items with the mice package
+premice_1 <- subset(rtsq_for_mice, select=c(id, rtsq1:rtsq20))
+premice_2 <- mice(premice_1, maxit=0, pri=F)
+pred <- premice_2$pred 
+    pred[,c("id")] <- 0 
+    meth <- premice_2$meth
+meth[c("id")] <- ""  
+
+postmice_a <- mice(premice_1, m=1, maxit=10, printFlag=TRUE, pred=pred, meth=meth, seed=2345) 
+postmice_b <- mice::complete(postmice_a, "long", include=FALSE)
+postmice_b$.imp <- NULL
+postmice_b$.id<-NULL
+write.table(postmice_b, "Lectures/4 Data cleaning/rtsq_mtx.txt", sep="\t", dec=".", row.names=FALSE)
+```
+
+# 11) importing the newly imputed datasets. Renaming variables. Summing items
+```{r}
+# loading the datasets
+sas_mtx<-read.delim("sas_mtx.txt", header = TRUE, sep = "\t", quote = "\"", dec = ".", fill = TRUE, comment.char = "")
+
+rtsq_mtx<-read.delim("rtsq_mtx.txt", header = TRUE, sep = "\t", quote = "\"", dec = ".", fill = TRUE, comment.char = "")
+
+# renaming these newly imputed datasets' variables with an _m suffix - using the dplyr package
+sas_mtx <- dplyr::rename(sas_mtx, sas1_m=sas1, sas2_m=sas2, sas3_m=sas3, sas4_m=sas4, sas5_m=sas5, sas6_m=sas6, sas7_m=sas7, sas8_m=sas8, sas9_m=sas9, sas10_m=sas10)
+
+rtsq_mtx <- dplyr::rename(rtsq_mtx, rtsq1_m=rtsq1, rtsq2_m=rtsq2, rtsq3_m=rtsq3, rtsq4_m=rtsq4, rtsq5_m=rtsq5, rtsq6_m=rtsq6, rtsq7_m=rtsq7, rtsq8_m=rtsq8, rtsq9_m=rtsq9, rtsq10_m=rtsq10, 
+rtsq11_m=rtsq11, rtsq12_m=rtsq12, rtsq13_m=rtsq13, rtsq14_m=rtsq14, rtsq15_m=rtsq15, rtsq16_m=rtsq16, rtsq17_m=rtsq17, rtsq18_m=rtsq18, rtsq19_m=rtsq19, rtsq20_m=rtsq20)
+
+# summing items to form total scores
+sas_mtx <- transform(sas_mtx, sas_mtx_sum = sas1_m+sas2_m+sas3_m+sas4_m+sas5_m+sas6_m+sas7_m+sas8_m+sas9_m+sas10_m)
+
+rtsq_mtx <- transform(rtsq_mtx, rtsq_mtx_sum = rtsq1_m+rtsq2_m+rtsq3_m+rtsq4_m+rtsq5_m+rtsq6_m+rtsq7_m+rtsq8_m+rtsq9_m+rtsq10_m+rtsq11_m+rtsq12_m+rtsq13_m+rtsq14_m+rtsq15_m+rtsq16_m+rtsq17_m+rtsq18_m+rtsq19_m+rtsq20_m)
+
+```
+
+# 12) merging these newly imputed datasets into the larger dataset
+```{r}
+web_mtx12 <- merge(rtsq_mtx,sas_mtx,by="id", all=T)
+psu4 <- merge(web_mtx12,psu3,by="id", all=T)
+
+# if you have to merge more than two datasets, you have to do this sequentially. As above.
+
+
+# to merge two datasets by adding cases: MYDATA_FULL <- rbind(MYDATASET1, MYDATASET2) 
+# the two data frames must have the same variables, but they do not have to be in the same order.
+# If data MYDATASET1 has variables that MYDATASET2 does not, then either:
+# Delete the extra variables in MYDATASET1 or
+# Create the additional variables in MYDATASET2 and set them to NA (missing) before joining them with rbind( ).
+
+```
+
+# 13) changing variable types again (numeric), and save as RData and for Mplus
+```{r}
+
+# change integer to numeric - again using the magrittr package
+psu4 %<>% mutate_if(is.integer,as.numeric)
+
+# let's run str to look at the variables again
+
+# save the dataset to a spreadsheet
+write.table(psu4, "psu4.txt", sep="\t", dec=".", row.names=FALSE)
+
+# using MplusAutomation, save as Mplus .dat and .inp files
+prepareMplusData(psu4, "psu4_Mplus.dat", dropCols=c("date_start", "date_end", "country"), inpfile = TRUE)
+
+# save the data frame as an RData file, to subsequent use in our next R Markdown files
+save(psu4, file="psu4.RData")
+
+```
