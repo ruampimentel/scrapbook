@@ -2,16 +2,29 @@
 library(tidyverse)
 library(psych)
 
-# load example data
-data(mtcars) 
-load(mtcars)
+# Descriptive methods
+mtcars %>% summary()
+mtcars %>% skimr::skim() 
+mtcars %>% Hmisc::describe()
+mtcars %>% psych::describe()
+mtcars %>% pastecs::stat.desc(norm = T) %>% t() %>% round(2) 
+mtcars %>% summarytools::dfSummary() %>% summarytools::view()
+mtcars %>% summarytools::descr(transpose = T)
 
-# run descriptive ----
+# Psych package ----
+## run descriptive ----
 a <- mtcars %>% 
   psych::describe() %>% # this is the main function that I need!
   as_tibble(rownames = "variables")  #organzining layout
 
-a
+# by group and merge
+describe(iris ~ Species)
+
+describe(iris ~ Species) %>% 
+  map_dfr(., ~ .x %>% 
+          as_tibble( rownames = "var") %>% 
+          slice(-n()), # remove last line
+          .id = "group")
 
 ## check skew - arranging (sorting) by skew ----
 a %>% arrange(abs(skew))
