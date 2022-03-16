@@ -23,3 +23,18 @@ d_from_t_one_sample <- function(t, n) {
 d_from_t_one_sample(t = 2.24,
                     n = 50)
 
+# EASYSTATS --------
+library(effectsize)
+
+t_to_d( t = 2.53, 
+        df = 47)
+
+t_to_d(3.27, 47)
+t_to_d(2.38, 43) %>% 
+  interpret_cohens_d()
+
+
+F_to_eta2(59.53, 20, 434) %>% 
+  interpret_eta_squared()
+
+F_to_r(3.09, 5, 43)
