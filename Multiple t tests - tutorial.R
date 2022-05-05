@@ -22,7 +22,7 @@ iris %>%
   group_by(Species) %>% 
   dfSummary() %>% 
   view()
-
+library(tidyr)
 iris_long <- iris %>% 
   pivot_longer(Sepal.Length:Petal.Width, 
                names_to = "name",
