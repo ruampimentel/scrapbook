@@ -21,10 +21,15 @@ a <- mtcars %>%
 describe(iris ~ Species)
 
 describe(iris ~ Species) %>% 
-  map_dfr(., ~ .x %>% 
-          as_tibble( rownames = "var") %>% 
-          slice(-n()), # remove last line
+  map_dfr(., ~ .x %>% as_tibble( rownames = "var") %>% slice(-n()), # remove last line
           .id = "group")
+
+iris %>% 
+  describeBy(group = "Species") %>% 
+  map_dfr(., 
+          ~ .x %>% as_tibble(rownames = "var") %>%  slice(-n()),
+          .id = "group"
+  ) 
 
 ## check skew - arranging (sorting) by skew ----
 a %>% arrange(abs(skew))
