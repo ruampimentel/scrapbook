@@ -1,14 +1,17 @@
 
 library(dplyr)
-library(PerformanceAnalytics)
 
 # Easy nice Correlation graph ----
+library(PerformanceAnalytics)
+
 mtcars %>% 
   select(1:3) %>% 
   chart.Correlation(histogram=TRUE, pch=19)
 
 # Correlation graphs
 # http://www.sthda.com/english/wiki/visualize-correlation-matrix-using-correlogram
+
+library(corrplot)
 
 M<-cor(mtcars)
 
