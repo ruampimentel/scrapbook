@@ -31,8 +31,11 @@ iris %>%
           .id = "group"
   ) 
 
+
+
 ## check skew - arranging (sorting) by skew ----
 a %>% arrange(abs(skew))
+
 
 ### variables with skew > 1.9 ----
 a %>% arrange(abs(skew)) %>% 
