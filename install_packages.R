@@ -9,7 +9,7 @@ name_packages <- c('devtools', 'tidyverse', 'effectsize',
                    'xlsx', 'tidyr', 'ggplot2', 'purrr', 'skimr', 'careless', 
                    'magrittr', 'correlation', 'stringr', 'lavaan', 
                    'TAM', 'rstatix', 'foreign', 'combinat', 'huxtable',
-                   'easystats', 'EFA.dimensions',
+                   'easystats', 'EFA.dimensions', 'summarytools',
                    
                    # Addins
                    'ymlthis',
