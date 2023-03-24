@@ -10,7 +10,7 @@ name_packages <- c('devtools', 'tidyverse', 'effectsize',
                    'magrittr', 'correlation', 'stringr', 'lavaan', 
                    'TAM', 'rstatix', 'foreign', 'combinat', 'huxtable',
                    'easystats', 'EFA.dimensions', 'summarytools',
-                   'writexl', 'sjmisc',
+                   'writexl', 'sjmisc', 'pwr',
                    # Addins
                    'ymlthis',
                    'styler',
