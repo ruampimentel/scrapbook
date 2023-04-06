@@ -15,7 +15,8 @@ name_packages <- c('devtools', 'tidyverse', 'effectsize',
                    # Addins
                    'ymlthis',
                    'styler',
-                   'ViewPipeSteps')
+                   'ViewPipeSteps',
+                   'esquisse')
 
 
 
