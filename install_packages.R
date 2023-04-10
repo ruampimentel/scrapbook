@@ -11,7 +11,7 @@ name_packages <- c('devtools', 'tidyverse', 'effectsize',
                    'TAM', 'rstatix', 'foreign', 'combinat', 'huxtable',
                    'easystats', 'EFA.dimensions', 'summarytools',
                    'writexl', 'sjmisc', 'pwr', 'psychTools', 'DataExplorer',
-                   'naniar', 'visdat',
+                   'naniar', 'visdat', 'tidylog', 'qualtRics',
                    # Addins
                    'ymlthis',
                    'styler',
