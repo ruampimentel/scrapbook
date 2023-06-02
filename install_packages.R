@@ -12,7 +12,7 @@ name_packages <- c('devtools', 'tidyverse', 'effectsize',
                    'easystats', 'EFA.dimensions', 'summarytools',
                    'writexl', 'sjmisc', 'pwr', 'psychTools', 'DataExplorer',
                    'naniar', 'visdat', 'tidylog', 'qualtRics', 'rempsyc',
-                   'gt',
+                   'gt', 'mice', 'devtools', 'bannerCommenter',
                    # Addins
                    'ymlthis',
                    'styler',
@@ -25,3 +25,5 @@ name_packages <- c('devtools', 'tidyverse', 'effectsize',
 name_packages |> unique()
 
 install.packages(name_packages)
+
+devtools::install_github("ThinkR-open/littleboxes")
