@@ -22,7 +22,7 @@ name_packages <- c('devtools', 'tidyverse', 'effectsize',
 
 
 
-name_packages |> unique()
+name_packages <- name_packages |> unique()
 
 install.packages(name_packages)
 
